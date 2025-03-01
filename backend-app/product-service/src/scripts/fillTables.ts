@@ -1,5 +1,5 @@
 import { DynamoDB, config } from "aws-sdk";
-import { v4 as uuidV4 } from "uuid";
+import { randomUUID } from "crypto";
 
 config.update({
   region: "eu-central-1",
@@ -33,7 +33,7 @@ const products = [
 async function fillTables() {
   try {
     for (const product of products) {
-      const productId = uuidV4();
+      const productId = randomUUID();
 
       // Добавление записи в таблицу products
       await dynamodb
