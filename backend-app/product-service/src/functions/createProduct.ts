@@ -6,6 +6,12 @@ import { randomUUID } from "crypto";
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  console.log("POST /products request:", {
+    body: event.body,
+    pathParameters: event.pathParameters,
+    queryStringParameters: event.queryStringParameters,
+  });
+
   try {
     const body = JSON.parse(event?.body as string);
     if (

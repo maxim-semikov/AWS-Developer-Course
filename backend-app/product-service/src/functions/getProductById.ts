@@ -5,6 +5,11 @@ import { docClient } from "./dbClient";
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  console.log("GET /products/{productId} request:", {
+    pathParameters: event.pathParameters,
+    queryStringParameters: event.queryStringParameters,
+  });
+
   try {
     const { productId } = event.pathParameters || {};
 
