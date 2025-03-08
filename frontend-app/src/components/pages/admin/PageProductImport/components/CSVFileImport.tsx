@@ -2,6 +2,23 @@ import React from "react";
 import axios from "axios";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 type CSVFileImportProps = {
   url: string;
@@ -65,11 +82,42 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         {title}
       </Typography>
       {!file ? (
-        <input type="file" accept=".csv" onChange={onFileChange} />
+              <Button
+                  component="label"
+                  size="small"
+                  role={undefined}
+                  variant="contained"
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+              >
+                Upload files
+                <VisuallyHiddenInput
+                    type="file"
+                    onChange={onFileChange}
+                    accept={'.csv'}
+                    multiple
+                />
+              </Button>
       ) : (
-        <div>
-          <button onClick={removeFile}>Remove file</button>
-          <button onClick={uploadFile}>Upload file</button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          <Button
+              size="small"
+              color="primary"
+              variant="contained"
+              startIcon={<DeleteIcon />}
+              onClick={removeFile}
+          >
+            Remove file
+          </Button>
+          <Button
+              size="small"
+              color="primary"
+              variant="contained"
+              startIcon={<FileUploadIcon />}
+              onClick={uploadFile}
+          >
+            Upload file
+          </Button>
         </div>
       )}
     </Box>
