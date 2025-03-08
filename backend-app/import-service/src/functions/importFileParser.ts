@@ -1,9 +1,9 @@
 import { S3Event } from "aws-lambda";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
 import csvParser from "csv-parser";
+import { Readable } from "stream";
 
-const s3Client = new S3Client({});
+export const s3Client = new S3Client({});
 
 interface CsvRecord {
   [key: string]: string;
