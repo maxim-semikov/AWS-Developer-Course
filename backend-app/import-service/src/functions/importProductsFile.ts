@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {KEY_PREFIX} from "../consts";
 
 const s3Client = new S3Client({});
 
@@ -26,7 +27,7 @@ export const handler = async (
       throw new Error("Missing required environment variables");
     }
 
-    const key = `uploaded/${fileName}`;
+    const key = `${KEY_PREFIX}/${fileName}`;
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
