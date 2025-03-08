@@ -1,4 +1,4 @@
-import { S3Event, Context } from "aws-lambda";
+import { S3Event } from "aws-lambda";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 import csvParser from "csv-parser";
@@ -9,7 +9,7 @@ interface CsvRecord {
   [key: string]: string;
 }
 
-export const handler = async (event: S3Event, context: Context) => {
+export const handler = async (event: S3Event) => {
   console.log(
     "importFileParser lambda called with event:",
     JSON.stringify(event)
