@@ -1,12 +1,15 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+} from "aws-lambda";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import {KEY_PREFIX} from "../consts";
+import { KEY_PREFIX } from "../consts";
 
 const s3Client = new S3Client({});
 
 export const handler = async (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
     const fileName = event.queryStringParameters?.name;
@@ -18,19 +21,15 @@ export const handler = async (
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Credentials": true,
         },
-        body: JSON.stringify({ message: "File name is required" }),
+        body: JSON.stringify({
+          message: "Missing required parameter: name",
+        }),
       };
     }
 
-    const bucketName = process.env.BUCKET_NAME;
-    if (!bucketName) {
-      throw new Error("Missing required environment variables");
-    }
-
     const key = `${KEY_PREFIX}/${fileName}`;
-
     const command = new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: process.env.BUCKET_NAME,
       Key: key,
       ContentType: "text/csv",
     });
@@ -56,8 +55,7 @@ export const handler = async (
         "Access-Control-Allow-Credentials": true,
       },
       body: JSON.stringify({
-        message: "Error generating signed URL",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Internal Server Error",
       }),
     };
   }
