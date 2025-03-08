@@ -1,5 +1,10 @@
 import { S3Event } from "aws-lambda";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  GetObjectCommand,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
 
@@ -7,6 +12,29 @@ export const s3Client = new S3Client({});
 
 interface CsvRecord {
   [key: string]: string;
+}
+
+async function moveFile(bucket: string, sourceKey: string): Promise<void> {
+  const targetKey = sourceKey.replace("uploaded/", "parsed/");
+
+  // Copy the file to parsed folder
+  await s3Client.send(
+    new CopyObjectCommand({
+      Bucket: bucket,
+      CopySource: `${bucket}/${sourceKey}`,
+      Key: targetKey,
+    })
+  );
+
+  // Delete the file from uploaded folder
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: sourceKey,
+    })
+  );
+
+  console.log(`Moved file from ${sourceKey} to ${targetKey}`);
 }
 
 export const handler = async (event: S3Event) => {
@@ -39,9 +67,15 @@ export const handler = async (event: S3Event) => {
               console.error("Error parsing CSV:", error);
               reject(error);
             })
-            .on("end", () => {
+            .on("end", async () => {
               console.log(`Finished processing file ${key}`);
-              resolve(null);
+              try {
+                await moveFile(bucket, key);
+                resolve(null);
+              } catch (error) {
+                console.error("Error moving file:", error);
+                reject(error);
+              }
             });
         });
       }

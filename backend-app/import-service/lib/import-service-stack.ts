@@ -6,7 +6,7 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
-import {KEY_PREFIX} from "../src/consts";
+import { KEY_PREFIX } from "../src/consts";
 
 const bucketName = process.env.BUCKET_NAME || "ms-bucket-uploaded";
 
@@ -59,7 +59,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     // Grant permissions to Lambda functions
     importBucket.grantReadWrite(importProductsFile);
-    importBucket.grantRead(importFileParser);
+    importBucket.grantReadWrite(importFileParser);
 
     // Add S3 notification for CSV files in uploaded folder
     importBucket.addEventNotification(
