@@ -1,6 +1,24 @@
 import React from "react";
+import axios from "axios";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 type CSVFileImportProps = {
   url: string;
@@ -23,24 +41,40 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   };
 
   const uploadFile = async () => {
-    console.log("uploadFile to", url);
+    try {
+      if (!file) {
+        console.log("No file");
+        return;
+      }
+      // Get the presigned URL
+      const response = await axios({
+        method: "GET",
+        url,
+        params: {
+          name: encodeURIComponent(file.name),
+        },
+      });
 
-    // Get the presigned URL
-    // const response = await axios({
-    //   method: "GET",
-    //   url,
-    //   params: {
-    //     name: encodeURIComponent(file.name),
-    //   },
-    // });
-    // console.log("File to upload: ", file.name);
-    // console.log("Uploading to: ", response.data);
-    // const result = await fetch(response.data, {
-    //   method: "PUT",
-    //   body: file,
-    // });
-    // console.log("Result: ", result);
-    // setFile("");
+      console.log("File to upload: ", file.name);
+      console.log("Uploading to: ", response.data.url);
+
+      const result = await fetch(response.data.url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": "text/csv",
+        },
+      });
+
+      if (!result.ok) {
+        throw new Error(`Upload failed: ${result.statusText}`);
+      }
+
+      console.log("Upload successful");
+      setFile(undefined);
+    } catch (error) {
+      console.error("Upload error:", error);
+    }
   };
   return (
     <Box>
@@ -48,11 +82,42 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         {title}
       </Typography>
       {!file ? (
-        <input type="file" onChange={onFileChange} />
+              <Button
+                  component="label"
+                  size="small"
+                  role={undefined}
+                  variant="contained"
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+              >
+                Upload files
+                <VisuallyHiddenInput
+                    type="file"
+                    onChange={onFileChange}
+                    accept={'.csv'}
+                    multiple
+                />
+              </Button>
       ) : (
-        <div>
-          <button onClick={removeFile}>Remove file</button>
-          <button onClick={uploadFile}>Upload file</button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          <Button
+              size="small"
+              color="primary"
+              variant="contained"
+              startIcon={<DeleteIcon />}
+              onClick={removeFile}
+          >
+            Remove file
+          </Button>
+          <Button
+              size="small"
+              color="primary"
+              variant="contained"
+              startIcon={<FileUploadIcon />}
+              onClick={uploadFile}
+          >
+            Upload file
+          </Button>
         </div>
       )}
     </Box>
