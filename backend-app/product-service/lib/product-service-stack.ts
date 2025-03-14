@@ -89,6 +89,17 @@ export class ProductServiceStack extends cdk.Stack {
       visibilityTimeout: cdk.Duration.seconds(30),
     });
 
+    // Export queue ARN and URL for Import Service
+    new cdk.CfnOutput(this, "CatalogItemsQueueArn", {
+      value: catalogItemsQueue.queueArn,
+      exportName: "CatalogItemsQueueArn",
+    });
+
+    new cdk.CfnOutput(this, "CatalogItemsQueueUrl", {
+      value: catalogItemsQueue.queueUrl,
+      exportName: "CatalogItemsQueueUrl",
+    });
+
     // Create Lambda function for processing catalog items
     const catalogBatchProcess = new lambda.Function(
       this,
