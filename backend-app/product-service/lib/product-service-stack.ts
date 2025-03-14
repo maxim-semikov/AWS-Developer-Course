@@ -2,6 +2,8 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Construct } from "constructs";
 import * as path from "path";
 
@@ -80,6 +82,42 @@ export class ProductServiceStack extends cdk.Stack {
     // Grant full write permissions for createProduct function
     productsTable.grantWriteData(createProductFunction);
     stocksTable.grantWriteData(createProductFunction);
+
+    // Create SQS queue
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
+      queueName: "catalogItemsQueue",
+      visibilityTimeout: cdk.Duration.seconds(30),
+    });
+
+    // Create Lambda function for processing catalog items
+    const catalogBatchProcess = new lambda.Function(
+      this,
+      "catalogBatchProcess",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "catalogBatchProcess.handler",
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../dist/src/functions")
+        ),
+        functionName: "catalogBatchProcess",
+        environment: {
+          PRODUCTS_TABLE: productsTable.tableName,
+          STOCKS_TABLE: stocksTable.tableName,
+          REGION: this.region,
+        },
+      }
+    );
+
+    // Grant permissions to Lambda
+    productsTable.grantWriteData(catalogBatchProcess);
+    stocksTable.grantWriteData(catalogBatchProcess);
+
+    // Add SQS trigger to Lambda
+    catalogBatchProcess.addEventSource(
+      new SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
+    );
 
     // Create API Gateway
     const api = new apigateway.RestApi(this, "productsApi", {
