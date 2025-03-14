@@ -3,6 +3,8 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Construct } from "constructs";
 import * as path from "path";
@@ -22,6 +24,16 @@ export class ProductServiceStack extends cdk.Stack {
       this,
       "ImportedStocksTable",
       "stocks"
+    );
+
+    // Create SNS topic for product creation
+    const createProductTopic = new sns.Topic(this, "CreateProductTopic", {
+      topicName: "createProductTopic",
+    });
+
+    // Add email subscription
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription("maxim.semikov87@gmail.com")
     );
 
     // Create Lambda functions with environment variables
@@ -115,6 +127,7 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE: productsTable.tableName,
           STOCKS_TABLE: stocksTable.tableName,
           REGION: this.region,
+          SNS_TOPIC_ARN: createProductTopic.topicArn,
         },
       }
     );
@@ -122,6 +135,7 @@ export class ProductServiceStack extends cdk.Stack {
     // Grant permissions to Lambda
     productsTable.grantWriteData(catalogBatchProcess);
     stocksTable.grantWriteData(catalogBatchProcess);
+    createProductTopic.grantPublish(catalogBatchProcess);
 
     // Add SQS trigger to Lambda
     catalogBatchProcess.addEventSource(
