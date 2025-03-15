@@ -34,6 +34,12 @@ async function sendNotification(products: ProductItem[]) {
       TopicArn: SNS_TOPIC_ARN,
       Message: JSON.stringify(message, null, 2),
       Subject: "Products Import Notification",
+      MessageAttributes: {
+        price: {
+          DataType: "Number",
+          StringValue: products[0].price.toString(),
+        },
+      },
     })
   );
 }

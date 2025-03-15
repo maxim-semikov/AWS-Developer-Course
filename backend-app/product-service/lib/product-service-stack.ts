@@ -31,9 +31,26 @@ export class ProductServiceStack extends cdk.Stack {
       topicName: "createProductTopic",
     });
 
-    // Add email subscription
+    // Add email subscription for high-value products (price >= 100)
     createProductTopic.addSubscription(
-      new subscriptions.EmailSubscription("maxim.semikov87@gmail.com")
+      new subscriptions.EmailSubscription("maxim.semikov87@gmail.com", {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            greaterThanOrEqualTo: 100,
+          }),
+        },
+      })
+    );
+
+    // Add email subscription for products (price < 100)
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription("spinnen87@gmail.com", {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            lessThan: 100,
+          }),
+        },
+      })
     );
 
     // Create Lambda functions with environment variables
