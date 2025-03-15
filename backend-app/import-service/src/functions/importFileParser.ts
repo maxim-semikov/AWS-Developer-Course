@@ -5,13 +5,20 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
 
 export const s3Client = new S3Client({});
+export const sqsClient = new SQSClient({});
+
+const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL;
 
 interface CsvRecord {
-  [key: string]: string;
+  title: string;
+  description: string;
+  price: string;
+  count: string;
 }
 
 async function moveFile(bucket: string, sourceKey: string): Promise<void> {
@@ -37,6 +44,26 @@ async function moveFile(bucket: string, sourceKey: string): Promise<void> {
   console.log(`Moved file from ${sourceKey} to ${targetKey}`);
 }
 
+async function sendRecordToSQS(record: CsvRecord): Promise<void> {
+  if (!SQS_QUEUE_URL) {
+    throw new Error("SQS_QUEUE_URL environment variable is not set");
+  }
+
+  const productData = {
+    title: record.title,
+    description: record.description,
+    price: Number(record.price),
+    count: Number(record.count),
+  };
+
+  await sqsClient.send(
+    new SendMessageCommand({
+      QueueUrl: SQS_QUEUE_URL,
+      MessageBody: JSON.stringify(productData),
+    })
+  );
+}
+
 export const handler = async (event: S3Event) => {
   console.log(
     "importFileParser lambda called with event:",
@@ -60,8 +87,13 @@ export const handler = async (event: S3Event) => {
       if (Body instanceof Readable) {
         await new Promise((resolve, reject) => {
           Body.pipe(csvParser())
-            .on("data", (data: CsvRecord) => {
-              console.log("Parsed CSV record:", JSON.stringify(data));
+            .on("data", async (data: CsvRecord) => {
+              try {
+                await sendRecordToSQS(data);
+                console.log(`Successfully sent record to SQS: ${data.title}`);
+              } catch (error) {
+                console.error("Error sending record to SQS:", error);
+              }
             })
             .on("error", (error: Error) => {
               console.error("Error parsing CSV:", error);
