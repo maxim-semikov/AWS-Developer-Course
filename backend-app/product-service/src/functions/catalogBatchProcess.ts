@@ -1,4 +1,4 @@
-import { SQSEvent, SQSHandler } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
 import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { docClient } from "./dbClient";
@@ -12,9 +12,10 @@ interface ProductItem {
 }
 
 const snsClient = new SNSClient({});
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 
 async function sendNotification(products: ProductItem[]) {
+  const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+
   if (!SNS_TOPIC_ARN) {
     throw new Error("SNS_TOPIC_ARN environment variable is not set");
   }
@@ -37,7 +38,7 @@ async function sendNotification(products: ProductItem[]) {
   );
 }
 
-export const handler: SQSHandler = async (event: SQSEvent) => {
+export const handler = async (event: SQSEvent) => {
   console.log(
     "catalogBatchProcess lambda called with event:",
     JSON.stringify(event)
