@@ -5,6 +5,7 @@ import * as nodejsLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { KEY_PREFIX } from "../src/consts";
 
@@ -20,6 +21,10 @@ export class ImportServiceStack extends cdk.Stack {
       "UploadedBucket",
       bucketName
     );
+
+    // Get reference to the existing SQS queue
+    const catalogItemsQueueArn = cdk.Fn.importValue("CatalogItemsQueueArn");
+    const catalogItemsQueueUrl = cdk.Fn.importValue("CatalogItemsQueueUrl");
 
     // Create Lambda function for import processing
     const importProductsFile = new nodejsLambda.NodejsFunction(
@@ -49,12 +54,22 @@ export class ImportServiceStack extends cdk.Stack {
         handler: "handler",
         environment: {
           BUCKET_NAME: importBucket.bucketName,
+          SQS_QUEUE_URL: catalogItemsQueueUrl,
         },
         bundling: {
           externalModules: [],
         },
         timeout: cdk.Duration.seconds(60),
       }
+    );
+
+    // Grant SQS permissions to importFileParser
+    importFileParser.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["sqs:SendMessage"],
+        resources: [catalogItemsQueueArn],
+      })
     );
 
     // Grant permissions to Lambda functions
