@@ -2,11 +2,13 @@ import React from "react";
 import axios from "axios";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-import { styled } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
+import { styled } from "@mui/material/styles";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
+import {getAuthorizationToken, setAuthorizationToken } from "~/utils/auth";
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -46,12 +48,22 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         console.log("No file");
         return;
       }
+
+      // Get authorization token from localStorage
+      const authorizationToken = getAuthorizationToken();
+      if (!authorizationToken) {
+        console.log("No Authorization Token");
+      }
+
       // Get the presigned URL
       const response = await axios({
         method: "GET",
         url,
         params: {
           name: encodeURIComponent(file.name),
+        },
+        headers: {
+          Authorization: `Basic ${authorizationToken}`,
         },
       });
 
@@ -78,48 +90,58 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   };
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      {!file ? (
-              <Button
-                  component="label"
-                  size="small"
-                  role={undefined}
-                  variant="contained"
-                  tabIndex={-1}
-                  startIcon={<CloudUploadIcon />}
-              >
-                Upload files
-                <VisuallyHiddenInput
-                    type="file"
-                    onChange={onFileChange}
-                    accept={'.csv'}
-                    multiple
-                />
-              </Button>
-      ) : (
-        <div style={{ display: "flex", gap: "6px" }}>
+      <Stack spacing={2}>
+        <Stack direction="column" alignItems="start">
+          <Typography variant="h6">{title}</Typography>
           <Button
+            size="small"
+            color="warning"
+            variant="contained"
+            onClick={() => setAuthorizationToken("maximsemikov")}
+          >
+            Set token to localStorage for test
+          </Button>
+        </Stack>
+        {!file ? (
+          <Button
+            component="label"
+            size="small"
+            role={undefined}
+            variant="contained"
+            tabIndex={-1}
+            startIcon={<CloudUploadIcon />}
+          >
+            Upload files
+            <VisuallyHiddenInput
+              type="file"
+              onChange={onFileChange}
+              accept={".csv"}
+              multiple
+            />
+          </Button>
+        ) : (
+          <div style={{ display: "flex", gap: "6px" }}>
+            <Button
               size="small"
               color="primary"
               variant="contained"
               startIcon={<DeleteIcon />}
               onClick={removeFile}
-          >
-            Remove file
-          </Button>
-          <Button
+            >
+              Remove file
+            </Button>
+            <Button
               size="small"
               color="primary"
               variant="contained"
               startIcon={<FileUploadIcon />}
               onClick={uploadFile}
-          >
-            Upload file
-          </Button>
-        </div>
-      )}
+            >
+              Upload file
+            </Button>
+          </div>
+        )}
+      </Stack>
     </Box>
   );
 }
