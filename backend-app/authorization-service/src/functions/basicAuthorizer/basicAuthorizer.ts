@@ -6,11 +6,13 @@ import {
 type Effect = "Allow" | "Deny";
 
 export const handler = async (
-  event: APIGatewayTokenAuthorizerEvent
-): Promise<APIGatewayAuthorizerResult> => {
+  event: APIGatewayTokenAuthorizerEvent, ctx:any, cb: any
+) => {
   try {
-    if (!event.authorizationToken) {
-      throw new Error("Unauthorized");
+    console.log('Received event', JSON.stringify(event));
+
+    if(event['type'] !== 'TOKEN') {
+      cb('Unauthorized');
     }
 
     const authToken = event.authorizationToken;
@@ -21,40 +23,39 @@ export const handler = async (
     const username = plainCreds[0];
     const password = plainCreds[1];
 
+    console.log('Received username ', username, 'and password ', password);
+
     const storedPassword = process.env[username];
     const effect = (
       !storedPassword || storedPassword !== password ? "Deny" : "Allow"
     ) as Effect;
 
-    const generatePolicy = (
-      principalId: string,
-      resource: string,
-      effect: Effect
-    ): APIGatewayAuthorizerResult => {
-      return {
-        principalId,
-        policyDocument: {
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Action: "execute-api:Invoke",
-              Effect: effect,
-              Resource: resource,
-            },
-          ],
-        },
-      };
-    };
+    const policy = generatePolicy(encodedCreds, event.methodArn, effect);
+    cb(null, policy);
 
-    switch (effect) {
-      case "Allow":
-        return generatePolicy(encodedCreds, event.methodArn, "Allow");
-      case "Deny":
-        return generatePolicy(encodedCreds, event.methodArn, "Deny");
-      default:
-        throw new Error("Unauthorized");
-    }
-  } catch (error) {
-    throw new Error("Unauthorized");
+
+  } catch (error: any) {
+    cb('Unauthorized: ', error?.message);
   }
+};
+
+
+const generatePolicy = (
+    principalId: string,
+    resource: string,
+    effect: Effect
+): APIGatewayAuthorizerResult => {
+  return {
+    principalId,
+    policyDocument: {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Action: "execute-api:Invoke",
+          Effect: effect,
+          Resource: resource,
+        },
+      ],
+    },
+  };
 };

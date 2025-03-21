@@ -36,14 +36,11 @@ export class AuthorizationServiceStack extends cdk.Stack {
       }
     );
 
-    // Add necessary permissions to the lambda
-    basicAuthorizer.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["lambda:InvokeFunction"],
-        resources: ["*"],
-      })
-    );
+    // Add permission for API Gateway to invoke the Lambda authorizer
+    basicAuthorizer.addPermission("APIGatewayInvoke", {
+      principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+      action: "lambda:InvokeFunction",
+    });
 
     new cdk.CfnOutput(this, "BasicAuthorizerArn", {
       value: basicAuthorizer.functionArn,
