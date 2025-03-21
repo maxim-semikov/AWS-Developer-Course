@@ -26,6 +26,13 @@ export class ImportServiceStack extends cdk.Stack {
     const catalogItemsQueueArn = cdk.Fn.importValue("CatalogItemsQueueArn");
     const catalogItemsQueueUrl = cdk.Fn.importValue("CatalogItemsQueueUrl");
 
+    // Get reference to the basicAuthorizer lambda
+    const basicAuthorizer = lambda.Function.fromFunctionArn(
+      this,
+      "BasicAuthorizer",
+      cdk.Fn.importValue("BasicAuthorizerArn")
+    );
+
     // Create Lambda function for import processing
     const importProductsFile = new nodejsLambda.NodejsFunction(
       this,
@@ -102,6 +109,16 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    // Create Lambda authorizer
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "ImportAuthorizer",
+      {
+        handler: basicAuthorizer,
+        identitySource: apigateway.IdentitySource.header("Authorization"),
+      }
+    );
+
     // Create API endpoint for file import
     const importIntegration = new apigateway.LambdaIntegration(
       importProductsFile,
@@ -138,6 +155,7 @@ export class ImportServiceStack extends cdk.Stack {
           },
         },
       ],
+      authorizer: authorizer,
     });
   }
 }
