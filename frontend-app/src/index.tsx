@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { theme } from "~/theme";
+import { ErrorProvider } from "~/contexts/ErrorContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,8 +28,10 @@ root.render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <App />
+          <ErrorProvider>
+            <CssBaseline />
+            <App />
+          </ErrorProvider>
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
