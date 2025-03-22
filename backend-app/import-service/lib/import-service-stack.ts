@@ -105,7 +105,6 @@ export class ImportServiceStack extends cdk.Stack {
           "X-Amz-Security-Token",
           "X-Amz-User-Agent",
         ],
-        allowCredentials: true,
       },
     });
 
@@ -115,28 +114,12 @@ export class ImportServiceStack extends cdk.Stack {
       "ImportAuthorizer",
       {
         handler: basicAuthorizer,
-        identitySource: apigateway.IdentitySource.header("Authorization"),
       }
     );
 
     // Create API endpoint for file import
     const importIntegration = new apigateway.LambdaIntegration(
       importProductsFile,
-      {
-        proxy: true,
-        integrationResponses: [
-          {
-            statusCode: "200",
-            responseParameters: {
-              "method.response.header.Access-Control-Allow-Origin": "'*'",
-              "method.response.header.Access-Control-Allow-Headers":
-                "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-              "method.response.header.Access-Control-Allow-Methods":
-                "'GET,OPTIONS'",
-            },
-          },
-        ],
-      }
     );
     const importResource = api.root.addResource("import");
 
@@ -145,17 +128,39 @@ export class ImportServiceStack extends cdk.Stack {
       requestParameters: {
         "method.request.querystring.name": true,
       },
-      methodResponses: [
-        {
-          statusCode: "200",
-          responseParameters: {
-            "method.response.header.Access-Control-Allow-Origin": true,
-            "method.response.header.Access-Control-Allow-Headers": true,
-            "method.response.header.Access-Control-Allow-Methods": true,
-          },
+        requestValidatorOptions: {
+            validateRequestParameters: true,
         },
-      ],
-      authorizer: authorizer,
+        authorizer: authorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
     });
+
+      api.addGatewayResponse("Unauthorized", {
+          type: apigateway.ResponseType.UNAUTHORIZED,
+          statusCode: "401",
+          responseHeaders: {
+              "Access-Control-Allow-Origin": "'*'",
+          },
+          templates: {
+              "application/json": JSON.stringify({
+                  message: "Unauthorized",
+                  statusCode: 401,
+              }),
+          },
+      });
+
+      api.addGatewayResponse("Forbidden", {
+          type: apigateway.ResponseType.ACCESS_DENIED,
+          statusCode: "403",
+          responseHeaders: {
+              "Access-Control-Allow-Origin": "'*'",
+          },
+          templates: {
+              "application/json": JSON.stringify({
+                  message: "Forbidden",
+                  statusCode: 403,
+              }),
+          },
+      });
   }
 }

@@ -5,6 +5,7 @@ import * as nodejsLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import * as path from "path";
 import * as dotenv from "dotenv";
+import {PolicyStatement} from "aws-cdk-lib/aws-iam";
 
 dotenv.config();
 
@@ -35,6 +36,18 @@ export class AuthorizationServiceStack extends cdk.Stack {
         },
       }
     );
+
+
+      basicAuthorizer.addToRolePolicy(
+          new PolicyStatement({
+              actions: [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+              ],
+              resources: ["*"],
+          })
+      );
 
     // Add permission for API Gateway to invoke the Lambda authorizer
     basicAuthorizer.addPermission("APIGatewayInvoke", {
