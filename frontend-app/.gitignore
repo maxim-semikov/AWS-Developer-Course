@@ -1,5 +1,23 @@
-node_modules
-.idea
-dist
-coverage
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
 .DS_Store
+
+# Coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
