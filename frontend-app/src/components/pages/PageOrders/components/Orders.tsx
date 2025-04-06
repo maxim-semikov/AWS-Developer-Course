@@ -39,7 +39,7 @@ export default function Orders() {
               <TableCell align="right">{order.items.length}</TableCell>
               <TableCell align="right">{order.address?.address}</TableCell>
               <TableCell align="right">
-                {order.statusHistory[order.statusHistory.length - 1].status}
+                CREATED
               </TableCell>
               <TableCell align="right">
                 <Button

@@ -14,11 +14,12 @@ export default function AddProductToCart({ product }: AddProductToCartProps) {
   const { data = [], isFetching } = useCart();
   const { mutate: upsertCart } = useUpsertCart();
   const invalidateCart = useInvalidateCart();
-  const cartItem = data.find((i) => i.product.id === product.id);
+  const cartItem = data.find((i) => i.product_id === product.id);
 
   const addProduct = () => {
+    if (!product.id) return;
     upsertCart(
-      { product, count: cartItem ? cartItem.count + 1 : 1 },
+      { product_id: product.id, count: cartItem ? cartItem.count + 1 : 1, product },
       { onSuccess: invalidateCart }
     );
   };

@@ -48,6 +48,7 @@ export const availableProducts: AvailableProduct[] = products.map(
 
 export const cart: CartItem[] = [
   {
+    product_id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
     product: {
       description: "Short Product Description1",
       id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
@@ -57,6 +58,7 @@ export const cart: CartItem[] = [
     count: 2,
   },
   {
+    product_id: "7567ec4b-b10c-45c5-9345-fc73c48a80a1",
     product: {
       description: "Short Product Description7",
       id: "7567ec4b-b10c-45c5-9345-fc73c48a80a1",
