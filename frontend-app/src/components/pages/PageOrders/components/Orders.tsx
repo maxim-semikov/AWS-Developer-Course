@@ -39,7 +39,7 @@ export default function Orders() {
               <TableCell align="right">{order.items.length}</TableCell>
               <TableCell align="right">{order.address?.address}</TableCell>
               <TableCell align="right">
-                NO WORK order.statusHistory
+                CREATED
               </TableCell>
               <TableCell align="right">
                 <Button
