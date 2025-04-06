@@ -9,7 +9,6 @@ export class FrontEndStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-
     // Create S3 bucket for hosting
     const hostingBucket = new s3.Bucket(this, "FrontEndHostingBucket", {
       // bucketName: "rs-school-nodejs-aws-developer",
@@ -18,7 +17,6 @@ export class FrontEndStack extends cdk.Stack {
       autoDeleteObjects: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
-
 
     // CloudFront Origin Access Identity
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(
@@ -33,21 +31,33 @@ export class FrontEndStack extends cdk.Stack {
     hostingBucket.grantRead(originAccessIdentity);
 
     // Create CloudFront distribution
-    const distribution = new cloudfront.Distribution(this, "FrontEndDistribution", {
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(hostingBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      defaultRootObject: "index.html",
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
+    const distribution = new cloudfront.Distribution(
+      this,
+      "FrontEndDistribution",
+      {
+        defaultBehavior: {
+          origin: origins.S3BucketOrigin.withOriginAccessControl(hostingBucket),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          responseHeadersPolicy:
+            cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
         },
-      ],
-    });
+        defaultRootObject: "index.html",
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responseHttpStatus: 200,
+            responsePagePath: "/index.html",
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: "/index.html",
+          },
+        ],
+      }
+    );
 
     // Deploy site contents to S3 bucket
     new s3deploy.BucketDeployment(this, "DeployWebsite", {
