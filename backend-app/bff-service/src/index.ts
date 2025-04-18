@@ -15,5 +15,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(config.port, () => {
-  console.log(`BFF Service is running on port ${config.port}`);
+  console.log(`BFF Service is running on port: ${config.port}`);
 });
