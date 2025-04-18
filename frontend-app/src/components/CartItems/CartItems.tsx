@@ -12,30 +12,33 @@ type CartItemsProps = {
 };
 
 export default function CartItems({ items, isEditable }: CartItemsProps) {
-  const totalPrice: number = items.reduce(
-    (total, item) => item.count * item.product.price + total,
-    0
-  );
+  const totalPrice: number = items.reduce((total, item) => {
+    if (!item.product) return total;
+    return item.count * item.product.price + total;
+  }, 0);
 
   return (
     <>
       <List disablePadding>
-        {items.map((cartItem: CartItem) => (
-          <ListItem
-            sx={{ padding: (theme) => theme.spacing(1, 0) }}
-            key={cartItem.product.id}
-          >
-            {isEditable && <AddProductToCart product={cartItem.product} />}
-            <ListItemText
-              primary={cartItem.product.title}
-              secondary={cartItem.product.description}
-            />
-            <Typography variant="body2">
-              {formatAsPrice(cartItem.product.price)} x {cartItem.count} ={" "}
-              {formatAsPrice(cartItem.product.price * cartItem.count)}
-            </Typography>
-          </ListItem>
-        ))}
+        {items.map((cartItem: CartItem) => {
+          if (!cartItem.product) return null;
+          return (
+            <ListItem
+              sx={{ padding: (theme) => theme.spacing(1, 0) }}
+              key={cartItem.product_id}
+            >
+              {isEditable && <AddProductToCart product={cartItem.product} />}
+              <ListItemText
+                primary={cartItem.product.title}
+                secondary={cartItem.product.description}
+              />
+              <Typography variant="body2">
+                {formatAsPrice(cartItem.product.price)} x {cartItem.count} ={" "}
+                {formatAsPrice(cartItem.product.price * cartItem.count)}
+              </Typography>
+            </ListItem>
+          );
+        })}
         <ListItem sx={{ padding: (theme) => theme.spacing(1, 0) }}>
           <ListItemText primary="Shipping" />
           <Typography variant="body2">Free</Typography>
