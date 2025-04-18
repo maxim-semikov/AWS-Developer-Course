@@ -9,7 +9,7 @@ interface ServiceConfig {
 }
 
 export const config = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3004,
   services: {
     product: process.env.PRODUCT_SERVICE_URL,
     cart: process.env.CART_SERVICE_URL,

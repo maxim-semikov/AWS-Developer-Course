@@ -1,44 +1,56 @@
 import axios, { AxiosError, Method } from "axios";
-import { Request, Response } from "express";
+import { IncomingMessage, ServerResponse } from "http";
 import { getServiceUrl } from "./config";
 
 export const proxyRequest = async (
-  req: Request,
-  res: Response
+  req: IncomingMessage,
+  res: ServerResponse
 ): Promise<void> => {
-  const serviceName = req.params.service;
+  const urlParts = req.url?.split("/") || [];
+  const serviceName = urlParts[1];
   const serviceUrl = getServiceUrl(serviceName);
-  console.log("serviceUrl: ", serviceUrl);
 
   if (!serviceUrl) {
-    res.status(502).json({ error: "Cannot process request" });
+    res.writeHead(502);
+    res.end(JSON.stringify({ error: "Cannot process request" }));
     return;
   }
 
   try {
+    let body = "";
+    await new Promise((resolve) => {
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", resolve);
+    });
+
     const axiosConfig = {
       method: req.method as Method,
-      url: `${serviceUrl}${req.originalUrl.replace(`/${serviceName}`, "")}`,
-      ...(Object.keys(req.body || {}).length > 0 && { data: req.body }),
+      url: `${serviceUrl}${req.url?.replace(`/${serviceName}`, "")}`,
+      ...(body && { data: JSON.parse(body) }),
       headers: {
         ...req.headers,
         host: new URL(serviceUrl).host,
       },
     };
 
-    console.log("axiosConfig", axiosConfig);
-
     const response = await axios(axiosConfig);
 
-    res.status(response.status).json(response.data);
+    res.writeHead(response.status, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(response.data));
   } catch (error) {
     const axiosError = error as AxiosError;
     if (axiosError.response) {
-      res.status(axiosError.response.status).json(axiosError.response.data);
+      res.writeHead(axiosError.response.status);
+      res.end(JSON.stringify(axiosError.response.data));
     } else {
-      res
-        .status(500)
-        .json({ error: (error as Error)?.message ?? "Something went wrong!" });
+      res.writeHead(500);
+      res.end(
+        JSON.stringify({
+          error: (error as Error)?.message ?? "Something went wrong!",
+        })
+      );
     }
   }
 };
