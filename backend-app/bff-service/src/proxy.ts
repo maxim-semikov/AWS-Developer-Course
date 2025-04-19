@@ -7,6 +7,27 @@ const CACHE_TTL = 120; // 2 minutes
 const PRODUCTS_CACHE_KEY = "products_list";
 const cache = new NodeCache();
 
+const readRequestBody = (req: IncomingMessage): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    req.on("end", () => {
+      console.log("Request body read complete:", body);
+      resolve(body);
+    });
+    req.on("error", (error) => {
+      console.error("Error reading request body:", error);
+      reject(error);
+    });
+
+    setTimeout(() => {
+      reject(new Error("Request body read timeout"));
+    }, 5000);
+  });
+};
+
 export const proxyRequest = async (
   req: IncomingMessage,
   res: ServerResponse
@@ -25,7 +46,7 @@ export const proxyRequest = async (
     if (
       serviceName === "product" &&
       req.method === "GET" &&
-      urlParts[2] === 'products'
+      urlParts[2] === "products"
     ) {
       const cachedProducts = cache.get(PRODUCTS_CACHE_KEY);
       if (cachedProducts) {
@@ -42,21 +63,14 @@ export const proxyRequest = async (
       return;
     }
 
-    let body = "";
-    await new Promise((resolve) => {
-      req.on("data", (chunk) => {
-        body += chunk.toString();
-      });
-      req.on("end", resolve);
-    });
+    const body = await readRequestBody(req);
 
     const axiosConfig = {
       method: req.method as Method,
       url: `${serviceUrl}${req.url?.replace(`/${serviceName}`, "")}`,
       ...(body && { data: JSON.parse(body) }),
       headers: {
-        ...req.headers,
-        host: new URL(serviceUrl).host,
+        "Content-Type": "application/json",
       },
     };
 
