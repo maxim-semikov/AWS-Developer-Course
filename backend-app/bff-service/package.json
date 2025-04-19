@@ -6,21 +6,26 @@
     "scripts": {
         "start": "node dist/index.js",
         "build": "tsc",
-        "dev": "ts-node-dev --respawn src/index.ts"
+        "dev": "ts-node-dev --respawn src/index.ts",
+        "postinstall": "npm run build",
+        "deploy": "npm run build && eb deploy production"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "axios": "^1.6.7",
-        "dotenv": "^16.4.5"
+        "dotenv": "^16.4.5",
+        "typescript": "^5.3.3",
+        "@types/node": "^20.11.24"
     },
     "devDependencies": {
-        "@types/node": "^20.11.24",
         "@typescript-eslint/eslint-plugin": "^6.20.0",
         "@typescript-eslint/parser": "^6.20.0",
         "eslint": "^8.56.0",
-        "ts-node-dev": "^2.0.0",
-        "typescript": "^5.3.3"
+        "ts-node-dev": "^2.0.0"
+    },
+    "engines": {
+        "node": "20.x"
     }
 }
