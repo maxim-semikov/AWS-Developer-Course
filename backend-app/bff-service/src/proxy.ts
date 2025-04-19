@@ -1,6 +1,11 @@
 import axios, { AxiosError, Method } from "axios";
 import { IncomingMessage, ServerResponse } from "http";
 import { getServiceUrl } from "./config";
+import NodeCache from "node-cache";
+
+const CACHE_TTL = 120; // 2 minutes
+const PRODUCTS_CACHE_KEY = "products_list";
+const cache = new NodeCache();
 
 export const proxyRequest = async (
   req: IncomingMessage,
@@ -17,6 +22,26 @@ export const proxyRequest = async (
   }
 
   try {
+    if (
+      serviceName === "product" &&
+      req.method === "GET" &&
+      urlParts[2] === 'products'
+    ) {
+      const cachedProducts = cache.get(PRODUCTS_CACHE_KEY);
+      if (cachedProducts) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(cachedProducts));
+        return;
+      }
+
+      const response = await axios.get(`${serviceUrl}/products`);
+      cache.set(PRODUCTS_CACHE_KEY, response.data, CACHE_TTL);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(response.data));
+      return;
+    }
+
     let body = "";
     await new Promise((resolve) => {
       req.on("data", (chunk) => {
