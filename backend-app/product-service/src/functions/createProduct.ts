@@ -51,6 +51,7 @@ export const handler = async (
         title: body.title,
         description: body.description,
         price: body.price,
+        imgUrl: body.imgUrl ?? null
       },
     };
     const paramsStock = {
@@ -94,6 +95,7 @@ export const handler = async (
         description: body.description,
         price: body.price,
         count: body.count,
+        imgUrl: body.imgUrl ?? null,
       }),
     };
   } catch (error) {
