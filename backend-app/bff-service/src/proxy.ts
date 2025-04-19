@@ -65,13 +65,19 @@ export const proxyRequest = async (
 
     const body = await readRequestBody(req);
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (req.headers.authorization) {
+      headers.Authorization = req.headers.authorization;
+    }
+
     const axiosConfig = {
       method: req.method as Method,
       url: `${serviceUrl}${req.url?.replace(`/${serviceName}`, "")}`,
       ...(body && { data: JSON.parse(body) }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
     };
 
     const response = await axios(axiosConfig);
