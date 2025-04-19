@@ -7,6 +7,19 @@ const CACHE_TTL = 120; // 2 minutes
 const PRODUCTS_CACHE_KEY = "products_list";
 const cache = new NodeCache();
 
+const isGetAllProductsRequest = (
+  method: string | undefined,
+  serviceName: string,
+  urlParts: string[]
+): boolean => {
+  return (
+    method === "GET" &&
+    serviceName === "product" &&
+    urlParts[2] === "products" &&
+    !urlParts[3]
+  );
+};
+
 const readRequestBody = (req: IncomingMessage): Promise<string> => {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -43,11 +56,7 @@ export const proxyRequest = async (
   }
 
   try {
-    if (
-      serviceName === "product" &&
-      req.method === "GET" &&
-      urlParts[2] === "products"
-    ) {
+    if (isGetAllProductsRequest(req.method, serviceName, urlParts)) {
       const cachedProducts = cache.get(PRODUCTS_CACHE_KEY);
       if (cachedProducts) {
         res.writeHead(200, { "Content-Type": "application/json" });
