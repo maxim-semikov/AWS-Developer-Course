@@ -25,8 +25,8 @@ export default function Products() {
           >
             <CardMedia
               sx={{ pt: "56.25%" }}
-              image={`https://picsum.photos/400/225?random=${index}`}
-              title="Image title"
+              image={product?.imgUrl ? product?.imgUrl : `https://picsum.photos/400/225?random=${index}`}
+              title="Product image"
             />
             <CardContent sx={{ flexGrow: 1 }}>
               <Typography gutterBottom variant="h5" component="h2">
